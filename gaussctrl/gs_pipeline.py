@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""InstructPix2Pix Pipeline and trainer"""
+"""GaussCtrl Pipeline and trainer"""
 
 import os
 from dataclasses import dataclass, field
@@ -31,11 +31,11 @@ from typing_extensions import Literal
 from nerfstudio.pipelines.base_pipeline import VanillaPipeline, VanillaPipelineConfig
 from nerfstudio.viewer.server.viewer_elements import ViewerNumber, ViewerText
 from diffusers.schedulers import DDIMScheduler, DDIMInverseScheduler
-from gs_edit.gs_datamanager import (
+from gaussctrl.gs_datamanager import (
     GaussEditDataManagerConfig,
 )
 from diffusers.models.attention_processor import AttnProcessor
-from gs_edit import utils
+from gaussctrl import utils
 from nerfstudio.viewer_legacy.server.utils import three_js_perspective_camera_focal_length
 from nerfstudio.cameras.cameras import Cameras, CameraType
 from nerfstudio.utils import colormaps

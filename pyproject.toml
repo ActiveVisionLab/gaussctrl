@@ -34,10 +34,10 @@ disable = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["gs_edit"]
+include = ["gaussctrl"]
 
 [project.entry-points.'nerfstudio.method_configs']
-gs-edit = 'gs_edit.gs_config:gs_edit_method'
+gs-edit = 'gaussctrl.gs_config:gaussctrl_method'
 
 [project.scripts]
-ns-myrender = "gs_edit.render:entrypoint"
+ns-myrender = "gaussctrl.render:entrypoint"

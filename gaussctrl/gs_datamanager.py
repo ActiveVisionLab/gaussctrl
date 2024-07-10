@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Instruct-NeRF2NeRF Datamanager.
+GaussCtrl Datamanager.
 """
 
 from __future__ import annotations
@@ -43,9 +43,9 @@ from nerfstudio.data.datamanagers.full_images_datamanager import (
     _undistort_image
 )
 from nerfstudio.data.datamanagers.base_datamanager import DataManager, DataManagerConfig, TDataset
-from gs_edit.gs_dataset import GSDataset
+from gaussctrl.gs_dataset import GSDataset
 from nerfstudio.data.datasets.base_dataset import InputDataset
-from gs_edit import utils
+from gaussctrl import utils
 
 
 

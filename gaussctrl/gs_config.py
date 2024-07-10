@@ -25,20 +25,20 @@ from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 from nerfstudio.data.datasets.depth_dataset import DepthDataset
 
-from gs_edit.gs_datamanager import GaussEditDataManagerConfig
-from gs_edit.gs import GaussEditModelConfig
-from gs_edit.gs_pipeline import GaussEditPipelineConfig
-from gs_edit.gs_trainer import GaussEditTrainerConfig
-from gs_edit.gs_datamanager import GaussEditDataManager
-from gs_edit.gs_dataparser_ns import GaussEditDataParserConfig
-from gs_edit.gs_dataparser_colmap import ColmapDataParserConfig
-from gs_edit.gs_dataset import GSDataset
+from gaussctrl.gs_datamanager import GaussEditDataManagerConfig
+from gaussctrl.gs import GaussEditModelConfig
+from gaussctrl.gs_pipeline import GaussEditPipelineConfig
+from gaussctrl.gs_trainer import GaussEditTrainerConfig
+from gaussctrl.gs_datamanager import GaussEditDataManager
+from gaussctrl.gs_dataparser_ns import GaussEditDataParserConfig
+from gaussctrl.gs_dataparser_colmap import ColmapDataParserConfig
+from gaussctrl.gs_dataset import GSDataset
 from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager, VanillaDataManagerConfig
 from nerfstudio.data.datamanagers.full_images_datamanager import FullImageDatamanager, FullImageDatamanagerConfig
 from nerfstudio.plugins.registry_dataparser import DataParserSpecification    
 
 
-gs_edit_method = MethodSpecification(
+gaussctrl_method = MethodSpecification(
     config=GaussEditTrainerConfig(
         method_name="gs-edit",
         steps_per_eval_image=100,
@@ -105,6 +105,6 @@ gs_edit_method = MethodSpecification(
         viewer=ViewerConfig(num_rays_per_chunk=1 << 15),
         vis="viewer",
     ),
-    description="GaussEdit",
+    description="GaussCtrl",
 )
 

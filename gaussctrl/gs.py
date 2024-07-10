@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Model for InstructNeRF2NeRF
+Model for GaussCtrl
 """
 
 from __future__ import annotations
