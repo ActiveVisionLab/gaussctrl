@@ -1,0 +1,43 @@
+[project]
+name = "gaussctrl"
+version = "0.1.0"
+
+dependencies=[
+    "clip @ git+https://github.com/openai/CLIP.git",
+    
+    "accelerate",
+    "einops",
+]
+
+# black
+[tool.black]
+line-length = 120
+
+# pylint
+[tool.pylint.messages_control]
+max-line-length = 120
+generated-members = ["numpy.*", "torch.*", "cv2.*", "cv.*"]
+good-names-rgxs = "^[_a-zA-Z][_a-z0-9]?$"
+ignore-paths = ["scripts/colmap2nerf.py"]
+jobs = 0
+ignored-classes = ["TensorDataclass"]
+
+disable = [
+  "duplicate-code",
+  "fixme",
+  "logging-fstring-interpolation",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-instance-attributes",
+  "too-many-locals",
+  "unnecessary-ellipsis",
+]
+
+[tool.setuptools.packages.find]
+include = ["gs_edit"]
+
+[project.entry-points.'nerfstudio.method_configs']
+gs-edit = 'gs_edit.gs_config:gs_edit_method'
+
+[project.scripts]
+ns-myrender = "gs_edit.render:entrypoint"
