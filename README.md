@@ -6,9 +6,9 @@
 [ ![Badge with Logo](https://img.shields.io/badge/download-data-green)](https://gaussctrl.active.vision/)
 
 
-<video src='https://gaussctrl.active.vision/assets/teaser_vid.mp4' width=400/>
+<!-- <video src='https://gaussctrl.active.vision/assets/teaser_vid.mp4' width=400/> -->
 
-```
+```bash
 pip install -U git+https://github.com/luca-medeiros/lang-segment-anything.git
 pip install huggingface-hub==0.20.3
 ```
