@@ -1,0 +1,17 @@
+# ns-train splatfacto --output-dir unedited_models --experiment-name fangzhou --viewer.quit-on-train-completion True nerfstudio-data --data data/fangzhou
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of an old man" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of a man with maasai face paint" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of an old lady" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of a man wearing a pair of glasses" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of bronze bust statue of a man" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of a man with chinese opera face paint" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of a newborn baby" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
+
+ns-train gaussctrl --load-checkpoint unedited_models/fangzhou/splatfacto/2024-07-11_173620/nerfstudio_models/step-000029999.ckpt --experiment-name fangzhou --output-dir outputs --pipeline.datamanager.data data/fangzhou --pipeline.prompt "a photo of a face of a woman with thick make-up" --pipeline.guidance_scale 7.5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'man' --viewer.quit-on-train-completion True 
