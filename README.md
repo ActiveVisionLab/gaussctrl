@@ -23,7 +23,7 @@
 [![Badge with Logo](https://img.shields.io/badge/arXiv-2403.08733-red?logo=arxiv)
 ](https://arxiv.org/abs/2403.08733)
 [![Badge with Logo](https://img.shields.io/badge/Project-Page-blue?logo=homepage)](https://gaussctrl.active.vision/)
-[![Badge with Logo](https://img.shields.io/badge/Download-Data-cyan)](https://unioxfordnexus-my.sharepoint.com/:f:/r/personal/catz0105_ox_ac_uk/Documents/GaussCtrl/data?csf=1&web=1&e=4rhbtG)
+[![Badge with Logo](https://img.shields.io/badge/Download-Data-cyan)](https://github.com/jingwu2121/gaussctrl/tree/main/data)
 [![Badge with Logo](https://img.shields.io/badge/BSD-License-green)](LICENSE.txt)
 </div>
 
@@ -73,27 +73,15 @@ ns-train -h
 
 ## Data
 
-### Use Our Data
+### Use Our Preprocessed Data
 
-1. Download and store all the data in the `data` folder. The folder structure should look like this:
+Our preprocessed data are under the `data` folder, where
+- `fangzhou` is from [NeRF-Art](https://github.com/cassiePython/NeRF-Art/tree/main/data/fangzhou_nature) 
+- `bear`, `face` are from [Instruct-NeRF2NeRF](https://drive.google.com/drive/folders/1v4MLNoSwxvSlWb26xvjxeoHpgjhi_s-s?usp=share_link) 
+- `garden` is from [Mip-NeRF 360](http://storage.googleapis.com/gresearch/refraw360/360_v2.zip) 
+- `stone horse` and `dinosaur` are from [BlendedMVS](https://github.com/YoYo000/BlendedMVS) 
 
-```bash
-├── assets
-├── data
-│   ├── bear
-│   ├── dinosaur
-│   ├── face
-│   ├── fangzhou
-│   ├── garden
-│   ├── stone_horse
-│   └── Your Custom Data
-├── gaussctrl
-├── scripts
-├── pyproject.toml
-├── LICENSE.txt
-├── README.md
-└── requirements.txt
-```
+We thank these authors for their great work!
 
 ### Customize Your Data
 
