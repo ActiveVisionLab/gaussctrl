@@ -1,14 +1,172 @@
-# [ECCV 2024] GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing
+<p align="center">
+  
+  <h1 align="center"><strong>[ECCV 2024] GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing</strong></h3>
+
+  <p align="center">
+    <a href="https://jingwu2121.github.io/" class="name-link" target="_blank">Jing Wu<sup>*1</sup> </a>,
+    <a href="https://jwbian.net/" class="name-link" target="_blank">Jia-Wang Bian<sup>*1</sup> </a>,
+    <a href="https://xinghui-li.github.io/" class="name-link" target="_blank">Xinghui Li<sup>1</sup></a>,
+    <a href="https://wanggrun.github.io/" class="name-link" target="_blank">Guangrun Wang<sup>1</sup></a>,
+    <a href="https://mbzuai.ac.ae/study/faculty/ian-reid/" class="name-link" target="_blank">Ian Reid<sup>2</sup></a>,
+    <a href="https://www.robots.ox.ac.uk/~phst/" class="name-link" target="_blank">Philip Torr<sup>1</sup></a>,
+    <a href="https://www.robots.ox.ac.uk/~victor/" class="name-link" target="_blank">Victor Adrian Prisacariu<sup>1</sup></a>
+    <br>
+    * denotes equal contribution
+    <br>
+    <sup>1</sup>University of Oxford,
+    <br>
+<sup>2</sup>Mohamed bin Zayed University of Artificial Intelligence
+</p>
+
+<div align="center">
 
 [![Badge with Logo](https://img.shields.io/badge/arXiv-2403.08733-red?logo=arxiv)
 ](https://arxiv.org/abs/2403.08733)
-[![Badge with Logo](https://img.shields.io/badge/project-page-blue?logo=homepage)](https://gaussctrl.active.vision/)
-[ ![Badge with Logo](https://img.shields.io/badge/download-data-green)](https://gaussctrl.active.vision/)
+[![Badge with Logo](https://img.shields.io/badge/Project-Page-blue?logo=homepage)](https://gaussctrl.active.vision/)
+[![Badge with Logo](https://img.shields.io/badge/Download-Data-cyan)]()
+[![Badge with Logo](https://img.shields.io/badge/BSD-License-green)](LICENSE.txt)
+</div>
 
+![teaser](./assets/teaser.png)
 
-<!-- <video src='https://gaussctrl.active.vision/assets/teaser_vid.mp4' width=400/> -->
+## Installation
+
+- Tested on CUDA11.8 + Ubuntu22.04 + NeRFStudio1.0.0 (NVIDIA RTX A5000 24G)
+
+Clone the repo. 
+```bash
+git clone https://github.com/jingwu2121/gaussctrl.git
+cd gaussctrl
+```
+
+### 1. NeRFStudio and Lang-SAM
+
+```bash
+conda create -n gaussctrl python=3.8
+conda activate gaussctrl
+conda install cuda -c nvidia/label/cuda-11.8.0
+```
+
+GaussCtrl is built upon NeRFStudio, follow [this link](https://docs.nerf.studio/quickstart/installation.html) to install NeRFStudio first. If you are failing to build tiny-cuda-nn, try building from scratch, see [here](https://github.com/NVlabs/tiny-cuda-nn/?tab=readme-ov-file#compilation-windows--linux). Please note that the NeRFStudio we use is v1.0.0. 
+
+```bash
+pip install nerfstudio==1.0.0
+```
+
+Install Lang-SAM for mask extraction. 
 
 ```bash
 pip install -U git+https://github.com/luca-medeiros/lang-segment-anything.git
-pip install huggingface-hub==0.20.3
+
+pip install -r requirements.txt
+```
+
+### 2. Install GaussCtrl
+```bash 
+pip install -e .
+```
+
+### 3. Verify the install
+```bash
+ns-train -h
+```
+
+## Data
+
+### Use Our Data
+
+1. Download and store all the data in the `data` folder. The folder structure should look like this:
+
+```bash
+├── assets
+├── data
+│   ├── bear
+│   ├── dinosaur
+│   ├── face
+│   ├── fangzhou
+│   ├── garden
+│   ├── stone_horse
+│   └── Your Custom Data
+├── gaussctrl
+├── scripts
+├── pyproject.toml
+├── LICENSE.txt
+├── README.md
+└── requirements.txt
+```
+
+### Customize Your Data
+
+We recommend to pre-process your data to 512x512, and follow [this page](https://docs.nerf.studio/quickstart/custom_dataset.html) to process your data. 
+
+## Get Started
+![Method](./assets/method.png)
+
+### 1. Train a 3DGS
+To get started, you firstly need to train your 3DGS model. We use `splatfacto` from NeRFStudio. 
+
+```bash 
+ns-train splatfacto --output-dir {output/folder} --experiment-name EXPEIMENT_NAME nerfstudio-data --data {path/to/your/data}
+```
+
+### 2. Edit your model
+Once you finish training the `splatfacto` model, the checkpoints will be saved to `unedited_models/bear` folder. 
+
+Start editing your model by running:
+
+```bash
+ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.prompt "YOUR PROMPT" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} --pipeline.langsam_obj 'OBJECT TO BE EDITED' 
+```
+
+Please note that the Lang-SAM is optional here. If you are editing the environment, please remove this argument. 
+
+```bash
+ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.prompt "YOUR PROMPT" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} 
+```
+
+Here, `--pipeline.guidance_scale` denotes the classifier free guidance used when editing the images. `--pipeline.chunk_size` denotes the number of images edited together during 1 batch. We are using **NVIDIA RTX A5000** GPU (24G), and the maximum chunk size is 3. (~22G) 
+
+### Small Tips
+- If your find your editings are not as expected, please check the images edited by ControlNet. 
+- Normally, conditioning your editing on the good ControlNet editing views is very helpful, which means it is better to choose those good ControlNet editing views as reference views. 
+
+## Reproducing Our Results
+
+Experiments in the main paper are inclued in `scripts` folder. To reproduce the results, first train the `splatfacto` model. We take the `bear` case as an example here. 
+```bash
+ns-train splatfacto --output-dir unedited_models --experiment-name bear nerfstudio-data --data data/bear
+```
+
+Then edit the 3DGS by running:
+```bash
+ns-train gaussctrl --load-checkpoint {unedited_models/bear/splatfacto/.../nerfstudio_models/step-000029999.ckpt} --experiment-name bear --output-dir outputs --pipeline.datamanager.data data/bear --pipeline.prompt "a photo of a polar bear in the forest" --pipeline.guidance_scale 5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'bear' 
+```
+
+In our experiments, We sampled 40 views randomly from the entire dataset to accelerate the method, which is set in `gc_datamanager.py` by default. We split the entire set into 4 subsets, and randomly sampled 10 images in each subset split. Feel free to decrease/increase the number to see the difference by modifying `--pipeline.datamanager.subset-num` and `--pipeline.datamanager.sampled-views-every-subset`. Set `--pipeline.datamanager.load-all` to `True`, if you want to edit all the images in the dataset. 
+
+## View Results Using NeRFStudio Viewer
+```bash
+ns-viewer --load-config {outputs/.../config.yml} 
+```
+
+## Render Your Results
+- Render the all the dataset views. 
+```bash 
+ns-gaussctrl-render dataset --load-config {outputs/.../config.yml} --output_path {render/EXPEIMENT_NAME} 
+```
+
+- Render a mp4 of a camera path
+```bash
+ns-gaussctrl-render camera-path --load-config {outputs/.../config.yml} --camera-path-filename data/EXPEIMENT_NAME/camera_paths/render-path.json --output_path render/EXPEIMENT_NAME.mp4
+```
+
+## Citation
+If you find this code or find the paper useful for your research, please consider citing:
+```
+@article{gaussctrl2024,
+author = {Wu, Jing and Bian, Jia-Wang and Li, Xinghui and Wang, Guangrun and Reid, Ian and Torr, Philip and Prisacariu, Victor},
+title = {{GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing}},
+booktitle = {ECCV},
+year = {2024},
+}
 ```
