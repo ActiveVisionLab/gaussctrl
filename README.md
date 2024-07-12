@@ -23,7 +23,7 @@
 [![Badge with Logo](https://img.shields.io/badge/arXiv-2403.08733-red?logo=arxiv)
 ](https://arxiv.org/abs/2403.08733)
 [![Badge with Logo](https://img.shields.io/badge/Project-Page-blue?logo=homepage)](https://gaussctrl.active.vision/)
-[![Badge with Logo](https://img.shields.io/badge/Download-Data-cyan)]()
+[![Badge with Logo](https://img.shields.io/badge/Download-Data-cyan)](https://unioxfordnexus-my.sharepoint.com/:f:/r/personal/catz0105_ox_ac_uk/Documents/GaussCtrl/data?csf=1&web=1&e=4rhbtG)
 [![Badge with Logo](https://img.shields.io/badge/BSD-License-green)](LICENSE.txt)
 </div>
 
