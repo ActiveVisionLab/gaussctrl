@@ -4,7 +4,7 @@
 
   <p align="center">
     <a href="https://jingwu2121.github.io/" class="name-link" target="_blank">Jing Wu<sup>*1</sup> </a>,
-    <a href="https://jwbian.net/" class="name-link" target="_blank">Jia-Wang Bian<sup>*1</sup> </a>,
+    <a href="https://jwbian.net/" class="name-link" target="_blank">Jia-Wang Bian<sup>*2</sup> </a>,
     <a href="https://xinghui-li.github.io/" class="name-link" target="_blank">Xinghui Li<sup>1</sup></a>,
     <a href="https://wanggrun.github.io/" class="name-link" target="_blank">Guangrun Wang<sup>1</sup></a>,
     <a href="https://mbzuai.ac.ae/study/faculty/ian-reid/" class="name-link" target="_blank">Ian Reid<sup>2</sup></a>,
