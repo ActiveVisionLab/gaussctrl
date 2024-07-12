@@ -160,6 +160,9 @@ ns-gaussctrl-render dataset --load-config {outputs/.../config.yml} --output_path
 ns-gaussctrl-render camera-path --load-config {outputs/.../config.yml} --camera-path-filename data/EXPEIMENT_NAME/camera_paths/render-path.json --output_path render/EXPEIMENT_NAME.mp4
 ```
 
+## Evaluation
+We use [this code](https://github.com/ayaanzhaque/instruct-nerf2nerf/tree/main/metrics) to evaluate our method. 
+
 ## Citation
 If you find this code or find the paper useful for your research, please consider citing:
 ```
