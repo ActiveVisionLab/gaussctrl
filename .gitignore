@@ -1,3 +1,17 @@
 data/
 processed_data/
 gaussctrl/__pycache__
+
+cmd.sh
+
+gaussctrl.egg-info/
+unedited_models/
+
+outputs/
+my_renders/
+mid_results/
+temp/
+render/
+
+requirements-old.txt
+environment.yml
