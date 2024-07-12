@@ -47,7 +47,7 @@ conda activate gaussctrl
 conda install cuda -c nvidia/label/cuda-11.8.0
 ```
 
-GaussCtrl is built upon NeRFStudio, follow [this link](https://docs.nerf.studio/quickstart/installation.html) to install NeRFStudio first. If you are failing to build tiny-cuda-nn, try building from scratch, see [here](https://github.com/NVlabs/tiny-cuda-nn/?tab=readme-ov-file#compilation-windows--linux). Please note that the NeRFStudio we use is v1.0.0. 
+GaussCtrl is built upon NeRFStudio, follow [this link](https://docs.nerf.studio/quickstart/installation.html) to install NeRFStudio first. If you are failing to build tiny-cuda-nn, try building from scratch, see [here](https://github.com/NVlabs/tiny-cuda-nn/?tab=readme-ov-file#compilation-windows--linux). We recommend using NeRFStudio v1.0.0 with gsplat v0.1.3. 
 
 ```bash
 pip install nerfstudio==1.0.0
