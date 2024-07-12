@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Instruct-NeRF2NeRF configuration file.
+GaussCtrl configuration file.
 """
 from pathlib import Path
 from dataclasses import dataclass
@@ -25,22 +25,21 @@ from nerfstudio.engine.schedulers import ExponentialDecaySchedulerConfig
 from nerfstudio.plugins.types import MethodSpecification
 from nerfstudio.data.datasets.depth_dataset import DepthDataset
 
-from gaussctrl.gs_datamanager import GaussEditDataManagerConfig
-from gaussctrl.gs import GaussEditModelConfig
-from gaussctrl.gs_pipeline import GaussEditPipelineConfig
-from gaussctrl.gs_trainer import GaussEditTrainerConfig
-from gaussctrl.gs_datamanager import GaussEditDataManager
-from gaussctrl.gs_dataparser_ns import GaussEditDataParserConfig
-from gaussctrl.gs_dataparser_colmap import ColmapDataParserConfig
-from gaussctrl.gs_dataset import GSDataset
+from gaussctrl.gc_datamanager import GaussCtrlDataManagerConfig
+from gaussctrl.gc_model import GaussCtrlModelConfig
+from gaussctrl.gc_pipeline import GaussCtrlPipelineConfig
+from gaussctrl.gc_trainer import GaussCtrlTrainerConfig
+from gaussctrl.gc_datamanager import GaussCtrlDataManager
+from gaussctrl.gc_dataparser_ns import GaussCtrlDataParserConfig
+from gaussctrl.gc_dataset import GCDataset
 from nerfstudio.data.datamanagers.base_datamanager import VanillaDataManager, VanillaDataManagerConfig
 from nerfstudio.data.datamanagers.full_images_datamanager import FullImageDatamanager, FullImageDatamanagerConfig
 from nerfstudio.plugins.registry_dataparser import DataParserSpecification    
 
 
 gaussctrl_method = MethodSpecification(
-    config=GaussEditTrainerConfig(
-        method_name="gs-edit",
+    config=GaussCtrlTrainerConfig(
+        method_name="gaussctrl",
         steps_per_eval_image=100,
         steps_per_eval_batch=0,
         steps_per_save=250,
@@ -49,28 +48,12 @@ gaussctrl_method = MethodSpecification(
         save_only_latest_checkpoint=True,
         mixed_precision=False,
         gradient_accumulation_steps={"camera_opt": 100},
-        pipeline=GaussEditPipelineConfig(
-            datamanager=GaussEditDataManagerConfig(
-                _target=GaussEditDataManager[GSDataset],
-                dataparser=GaussEditDataParserConfig(load_3D_points=False,
-                                            #   data=Path('data/bear60'),
-                                            #   filename='outer_60.json'
-                                              ),
-                # dataparser=ColmapDataParserConfig(load_3D_points=False,
-                #                             #   data=Path('data/bear60'),
-                #                             #   filename='outer_60.json'
-                #                               ),
-                # dataparser=NerfstudioDataParserConfig(load_3D_points=False,
-                #                             #   data=Path('data/bear60'),
-                #                             #   filename='outer_60.json'
-                #                               ),
-                # camera_optimizer=CameraOptimizerConfig(
-                #     mode="SO3xR3",
-                #     optimizer=AdamOptimizerConfig(lr=6e-4, eps=1e-8, weight_decay=1e-2),
-                #     scheduler=ExponentialDecaySchedulerConfig(lr_final=6e-6, max_steps=200000),
-                # ),
+        pipeline=GaussCtrlPipelineConfig(
+            datamanager=GaussCtrlDataManagerConfig(
+                _target=GaussCtrlDataManager[GCDataset],
+                dataparser=GaussCtrlDataParserConfig(load_3D_points=True,),
             ),
-            model=GaussEditModelConfig(),
+            model=GaussCtrlModelConfig(),
         ),
         optimizers={
             "xyz": {

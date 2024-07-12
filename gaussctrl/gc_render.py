@@ -14,7 +14,7 @@
 
 #!/usr/bin/env python
 """
-render.py
+GaussCtrl Render 
 """
 from __future__ import annotations
 
@@ -725,7 +725,7 @@ def _disable_datamanager_setup(cls):
 class DatasetRender(BaseRender):
     """Render all images in the dataset."""
 
-    output_path: Path = Path("my_renders/fangzhou_render")
+    output_path: Path = Path("renders")
     """Path to output video file."""
     data: Optional[Path] = None
     """Override path to the dataset."""
@@ -734,8 +734,8 @@ class DatasetRender(BaseRender):
     split: Literal["train", "val", "test", "train+test"] = "train+test"
     """Split to render."""
     rendered_output_names: Optional[List[str]] = field(default_factory=lambda: None)
-    """Name of the renderer outputs to use. rgb, depth, raw-depth, gt-rgb etc. By default all outputs are rendered."""
-    render_512: bool = True
+    """Name of the renderer outputs to use. rgb, depth, depth_npy etc. By default all outputs are rendered."""
+    save_depth_npy: bool = False
 
     def main(self):
         config: TrainerConfig
@@ -786,168 +786,90 @@ class DatasetRender(BaseRender):
                 num_workers=datamanager.world_size * 4,
             )
 
-            try:# if dataparser_outputs.image_filenames != []:
+            try:
                 images_root = Path(os.path.commonpath(dataparser_outputs.image_filenames))
             except:
                 break
-            # elif dataparser_outputs.image_filenames == []:
-            #     CONSOLE.print("No eval data, not rendering here")
-            #     break
             
-            
-            #####################################
-            if self.render_512:
-                device = dataloader.device
-                c2ws = dataloader.cameras.camera_to_worlds
-                fov = 50
-                image_height = 512
-                focal_length = three_js_perspective_camera_focal_length(fov, image_height)
-                fx = torch.tensor([focal_length] * len(c2ws))
-                fy = torch.tensor([focal_length] * len(c2ws))
-                cameras = Cameras(
-                    fx=fx,
-                    fy=fy,
-                    cx=512.0 / 2,
-                    cy=512.0 / 2,
-                    camera_to_worlds=c2ws.to('cpu'),
-                    camera_type=CameraType.PERSPECTIVE,
-                ).to(device)
-                dataloader.cameras = cameras
-                
-            #####################################
-
-            # with Progress(
-            #     TextColumn(f":movie_camera: Rendering split {split} :movie_camera:"),
-            #     BarColumn(),
-            #     TaskProgressColumn(
-            #         text_format="[progress.percentage]{task.completed}/{task.total:>.0f}({task.percentage:>3.1f}%)",
-            #         show_speed=True,
-            #     ),
-            #     ItersPerSecColumn(suffix="fps"),
-            #     TimeRemainingColumn(elapsed_when_finished=False, compact=False),
-            #     TimeElapsedColumn(),
-            # ) as progress:
-                # for camera_idx, (camera, batch) in enumerate(progress.track(dataloader, total=len(dataset))):
-            for camera_idx, (camera, batch) in enumerate(dataloader):
-                with torch.no_grad():
-                    # outputs = pipeline.model.get_outputs_for_camera(
-                    #         cameras[camera_idx : camera_idx + 1], obb_box=None
-                    #     )
+            with Progress(
+                TextColumn(f":movie_camera: Rendering :movie_camera:"),
+                BarColumn(),
+                TaskProgressColumn(
+                    text_format="[progress.percentage]{task.completed}/{task.total:>.0f}({task.percentage:>3.1f}%)",
+                    show_speed=True,
+                ),
+                ItersPerSecColumn(suffix="fps"),
+                TimeRemainingColumn(elapsed_when_finished=False, compact=False),
+                TimeElapsedColumn(),
+            ) as progress:
+                for camera_idx, (camera, batch) in enumerate(progress.track(dataloader)):
+                    with torch.no_grad():                        
+                        outputs = pipeline.model.get_outputs_for_camera(camera)
                     
-                    outputs = pipeline.model.get_outputs_for_camera(camera)
-                
-                # gt_batch = batch.copy()
-                # gt_batch["rgb"] = gt_batch.pop("image")
-                # all_outputs = (
-                #     list(outputs.keys())
-                #     + [f"raw-{x}" for x in outputs.keys()]
-                #     + [f"gt-{x}" for x in gt_batch.keys()]
-                #     + [f"raw-gt-{x}" for x in gt_batch.keys()]
-                # )
-                rendered_output_names = self.rendered_output_names
-                if rendered_output_names is None:
-                    # rendered_output_names = ["gt-rgb"] + list(outputs.keys())
-                    rendered_output_names = list(outputs.keys())
-                for rendered_output_name in rendered_output_names:
-                    # if rendered_output_name not in all_outputs:
-                    #     CONSOLE.rule("Error", style="red")
-                    #     CONSOLE.print(
-                    #         f"Could not find {rendered_output_name} in the model outputs", justify="center"
-                    #     )
-                    #     CONSOLE.print(
-                    #         f"Please set --rendered-output-name to one of: {all_outputs}", justify="center"
-                    #     )
-                    #     sys.exit(1)
+                    rendered_output_names = self.rendered_output_names
+                    if rendered_output_names is None:
+                        rendered_output_names = list(outputs.keys())
+                    for rendered_output_name in rendered_output_names:
+                        is_depth = rendered_output_name.find("depth") != -1
+                        image_name = f"{camera_idx:05d}"
 
-                    is_raw = False
-                    is_depth = rendered_output_name.find("depth") != -1
-                    image_name = f"{camera_idx:05d}"
+                        # Try to get the original filename
+                        image_name = (
+                            dataparser_outputs.image_filenames[camera_idx].with_suffix("").relative_to(images_root)
+                        )
 
-                    # Try to get the original filename
-                    image_name = (
-                        dataparser_outputs.image_filenames[camera_idx].with_suffix("").relative_to(images_root)
-                    )
+                        output_path = self.output_path / rendered_output_name / image_name
+                        output_path.parent.mkdir(exist_ok=True, parents=True)
 
-                    output_path = self.output_path / rendered_output_name / image_name
-                    output_path.parent.mkdir(exist_ok=True, parents=True)
+                        output_name = rendered_output_name
+                        output_image = outputs[output_name]
+                        if is_depth:
+                            # Divide by the dataparser scale factor
+                            output_image.div_(dataparser_outputs.dataparser_scale)
 
-                    output_name = rendered_output_name
-                    output_image = outputs[output_name]
-                    if is_depth:
-                        # Divide by the dataparser scale factor
-                        output_image.div_(dataparser_outputs.dataparser_scale)
+                        del output_name
 
-                    # if output_name.startswith("raw-"):
-                    #     output_name = output_name[4:]
-                    #     is_raw = True
-                    #     if output_name.startswith("gt-"):
-                    #         output_name = output_name[3:]
-                    #         output_image = gt_batch[output_name]
-                    #     else:
-                    #         output_image = outputs[output_name]
-                    #         if is_depth:
-                    #             # Divide by the dataparser scale factor
-                    #             output_image.div_(dataparser_outputs.dataparser_scale)
-                    # else:
-                    #     if output_name.startswith("gt-"):
-                    #         output_name = output_name[3:]
-                    #         output_image = gt_batch[output_name]
-                    #     else:
-                    #         output_image = outputs[output_name]
-                    del output_name
+                        # Map to color spaces / numpy
+                        if is_depth:
+                            if self.save_depth_npy:
+                                depth_dir = self.output_path / 'depth_npy'
+                                depth_path = str(output_path).replace('depth', 'depth_npy') + '.npy'
+                                os.makedirs(depth_dir, exist_ok=True)
+                                np.save(depth_path, output_image.cpu().numpy())
 
-                    # Map to color spaces / numpy
-                    if is_raw:
-                        output_image = output_image.cpu().numpy()
-                    elif is_depth:
-                        depth_dir = self.output_path / 'depth_npy'
-                        depth_path = str(output_path).replace('depth', 'depth_npy') + '.npy'
-                        os.makedirs(depth_dir, exist_ok=True)
-                        np.save(depth_path, output_image.cpu().numpy())
-
-                        # visualization
-                        output_image = (
-                            colormaps.apply_depth_colormap(
-                                output_image,
-                                accumulation=outputs["accumulation"],
-                                near_plane=self.depth_near_plane,
-                                far_plane=self.depth_near_plane,
-                                colormap_options=self.colormap_options,
+                            # visualization
+                            output_image = (
+                                colormaps.apply_depth_colormap(
+                                    output_image,
+                                    accumulation=outputs["accumulation"],
+                                    near_plane=self.depth_near_plane,
+                                    far_plane=self.depth_near_plane,
+                                    colormap_options=self.colormap_options,
+                                )
+                                .cpu()
+                                .numpy()
                             )
-                            .cpu()
-                            .numpy()
-                        )
-                    else:
-                        output_image = (
-                            colormaps.apply_colormap(
-                                image=output_image,
-                                colormap_options=self.colormap_options,
+                        else:
+                            output_image = (
+                                colormaps.apply_colormap(
+                                    image=output_image,
+                                    colormap_options=self.colormap_options,
+                                )
+                                .cpu()
+                                .numpy()
                             )
-                            .cpu()
-                            .numpy()
-                        )
 
-                    # Save to file
-                    if is_raw:
-                        np.save(output_path.with_suffix(".npy"), output_image)
-                    elif self.image_format == "png":
-                        media.write_image(output_path.with_suffix(".png"), output_image, fmt="png")
-                    elif self.image_format == "jpeg":
-                        media.write_image(
-                            output_path.with_suffix(".jpg"), output_image, fmt="jpeg", quality=self.jpeg_quality
-                        )
-                    else:
-                        raise ValueError(f"Unknown image format {self.image_format}")
+                        # Save to file
+                        if self.image_format == "png":
+                            media.write_image(output_path.with_suffix(".png"), output_image, fmt="png")
+                        elif self.image_format == "jpeg":
+                            media.write_image(
+                                output_path.with_suffix(".jpg"), output_image, fmt="jpeg", quality=self.jpeg_quality
+                            )
+                        else:
+                            raise ValueError(f"Unknown image format {self.image_format}")
 
-        # table = Table(
-        #     title=None,
-        #     show_header=False,
-        #     box=box.MINIMAL,
-        #     title_style=style.Style(bold=True),
-        # )
-        # for split in self.split.split("+"):
-        #     table.add_row(f"Outputs {split}", str(self.output_path / split))
-        # CONSOLE.print(Panel(table, title="[bold][green]:tada: Render on split {} Complete :tada:[/bold]", expand=False))
+        CONSOLE.print("[bold][green]:tada: Render Complete :tada:[/bold]")
 
 
 Commands = tyro.conf.FlagConversionOff[

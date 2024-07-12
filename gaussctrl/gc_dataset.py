@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-GS dataset.
+GaussCtrl dataset.
 """
 
 import json
@@ -68,7 +68,7 @@ def get_depth_z_0_image_from_path(
         raise TypeError("Wrong depth type, depth files should be .npy files")
     # return torch.from_numpy(image[:, :, np.newaxis])
 
-class GSDataset(InputDataset):
+class GCDataset(InputDataset):
     """Dataset that returns images and depths. If no depths are found, then we generate them with Zoe Depth.
 
     Args:
@@ -78,19 +78,12 @@ class GSDataset(InputDataset):
 
     def __init__(self, dataparser_outputs: DataparserOutputs, scale_factor: float = 1.0):
         super().__init__(dataparser_outputs, scale_factor)
-        # if there are no depth images than we want to generate them all with zoe depth
-
-        # if len(dataparser_outputs.image_filenames) > 0 and (
-        #     "depth_filenames" not in dataparser_outputs.metadata.keys()
-        #     or dataparser_outputs.metadata["depth_filenames"] is None
-        # ):
-        #     CONSOLE.print("[bold yellow] No depth data found! Generating pseudodepth...")
-        #     raise ImportError
         if 'depth_filenames' in self.metadata.keys():
             self.depth_filenames = self.metadata["depth_filenames"]
         if 'z_0_filenames' in self.metadata.keys():
             self.z_0_filenames = self.metadata["z_0_filenames"]
-        self.unedited_image_filenames = self.metadata["unedited_image_filenames"]
+        if 'unedited_image_filenames' in self.metadata.keys():
+            self.unedited_image_filenames = self.metadata["unedited_image_filenames"]
         if 'mask_filenames' in self.metadata.keys():
             self.mask_filenames = self.metadata["mask_filenames"]
 
@@ -134,8 +127,6 @@ class GSDataset(InputDataset):
         return image
 
     def get_metadata(self, data: Dict) -> Dict:
-        # if self.depth_filenames is None:
-        #     return {"depth_image": self.depths[data["image_idx"]]}
         meta = {}
         height = int(self._dataparser_outputs.cameras.height[data["image_idx"]])
         width = int(self._dataparser_outputs.cameras.width[data["image_idx"]])
@@ -153,27 +144,17 @@ class GSDataset(InputDataset):
                 filepath=z_0_filepath, height=height, width=width, scale_factor=1, read_type='z_0'
             )
             meta["z_0_image"] = z_0_image
-        # unedited_image_filepath = self.unedited_image_filenames[data["image_idx"]]
         if 'mask_filenames' in self.metadata.keys():
             mask_filepath = self.mask_filenames[data["image_idx"]]
             mask_image = get_depth_z_0_image_from_path(
                 filepath=mask_filepath, height=height, width=width, scale_factor=1, read_type='mask'
             ) # boolean
             meta["mask_image"] = mask_image
-        
-        unedited_image = self.get_unedited_numpy_image(data["image_idx"])
-        unedited_image = torch.from_numpy(unedited_image.astype("float32") / 255.0) 
-        meta["unedited_image"] = unedited_image          
-
-        
-        # a = mask_image * 255
-        # a_np = a.astype(np.uint8)
-        # a_pil = Image.fromarray(a_np)
-        # a_pil.save('try.jpg')
-        # breakpoint()
-
-        # return {"depth_image": depth_image, "z_0_image": z_0_image, "mask_image": mask_image, "unedited_image": unedited_image} if 'mask_filenames' in self.metadata.keys() else {"depth_image": depth_image, "z_0_image": z_0_image, "unedited_image": unedited_image}
-    
+        if 'unedited_image_filenames' in self.metadata.keys():
+            unedited_image = self.get_unedited_numpy_image(data["image_idx"])
+            unedited_image = torch.from_numpy(unedited_image.astype("float32") / 255.0) 
+            meta["unedited_image"] = unedited_image 
+            
         return meta
 
     def _find_transform(self, image_path: Path) -> Union[Path, None]:

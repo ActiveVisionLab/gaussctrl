@@ -13,10 +13,11 @@
 # limitations under the License.
 
 """
-Code to train model, only needed in order to not save InstructPix2Pix checkpoints
+Code to train GaussCtrl model
 """
 from dataclasses import dataclass, field
-from typing import Type, Tuple, Dict
+import dataclasses
+from typing import Type, Tuple, Dict, Literal
 import functools
 import time
 from rich import box, style
@@ -32,27 +33,105 @@ from nerfstudio.utils.writer import EventName, TimeWriter
 from nerfstudio.engine.callbacks import TrainingCallback, TrainingCallbackAttributes, TrainingCallbackLocation
 from nerfstudio.utils.misc import step_check
 from nerfstudio.utils.rich_utils import CONSOLE
+from nerfstudio.viewer_legacy.server.viewer_state import ViewerLegacyState
+from nerfstudio.viewer.viewer import Viewer as ViewerState
 
 TRAIN_INTERATION_OUTPUT = Tuple[torch.Tensor, Dict[str, torch.Tensor], Dict[str, torch.Tensor]]
 TORCH_DEVICE = str
 
 @dataclass
-class GaussEditTrainerConfig(TrainerConfig):
-    """Configuration for the InstructNeRF2NeRFTrainer."""
-    _target: Type = field(default_factory=lambda: GaussEditTrainer)
+class GaussCtrlTrainerConfig(TrainerConfig):
+    """Configuration for the GaussCtrlTrainer."""
+    _target: Type = field(default_factory=lambda: GaussCtrlTrainer)
     steps_per_save: int = 500
     """Number of steps between saves."""
-    # dataset_update_num: int = 2
 
-
-class GaussEditTrainer(Trainer):
-    """Trainer for InstructNeRF2NeRF"""
+class GaussCtrlTrainer(Trainer):
+    """Trainer for GaussCtrl"""
 
     def __init__(self, config: TrainerConfig, local_rank: int = 0, world_size: int = 1) -> None:
 
         super().__init__(config, local_rank, world_size)
         # reset button
         self.reset_button = ViewerButton(name="Reset Button", cb_hook=self.reset_callback)
+
+    def setup(self, test_mode: Literal["test", "val", "inference"] = "val") -> None:
+        """Setup the Trainer by calling other setup functions.
+
+        Args:
+            test_mode:
+                'val': loads train/val datasets into memory
+                'test': loads train/test datasets into memory
+                'inference': does not load any dataset into memory
+        """
+        self.pipeline = self.config.pipeline.setup(
+            device=self.device,
+            test_mode=test_mode,
+            world_size=self.world_size,
+            local_rank=self.local_rank,
+            grad_scaler=self.grad_scaler,
+        )
+        self.optimizers = self.setup_optimizers()
+        self._load_checkpoint()
+        self.pipeline.render_reverse()
+        if self.pipeline.test_mode == "val":
+            self.pipeline.edit_images()
+
+        # set up viewer if enabled
+        viewer_log_path = self.base_dir / self.config.viewer.relative_log_filename
+        self.viewer_state, banner_messages = None, None
+        if self.config.is_viewer_legacy_enabled() and self.local_rank == 0:
+            datapath = self.config.data
+            if datapath is None:
+                datapath = self.base_dir
+            self.viewer_state = ViewerLegacyState(
+                self.config.viewer,
+                log_filename=viewer_log_path,
+                datapath=datapath,
+                pipeline=self.pipeline,
+                trainer=self,
+                train_lock=self.train_lock,
+            )
+            banner_messages = [f"Legacy viewer at: {self.viewer_state.viewer_url}"]
+        if self.config.is_viewer_enabled() and self.local_rank == 0:
+            datapath = self.config.data
+            if datapath is None:
+                datapath = self.base_dir
+            self.viewer_state = ViewerState(
+                self.config.viewer,
+                log_filename=viewer_log_path,
+                datapath=datapath,
+                pipeline=self.pipeline,
+                trainer=self,
+                train_lock=self.train_lock,
+                share=self.config.viewer.make_share_url,
+            )
+            banner_messages = self.viewer_state.viewer_info
+        self._check_viewer_warnings()
+
+        self.callbacks = self.pipeline.get_training_callbacks(
+            TrainingCallbackAttributes(
+                optimizers=self.optimizers,
+                grad_scaler=self.grad_scaler,
+                pipeline=self.pipeline,
+            )
+        )
+
+        # set up writers/profilers if enabled
+        writer_log_path = self.base_dir / self.config.logging.relative_log_dir
+        writer.setup_event_writer(
+            self.config.is_wandb_enabled(),
+            self.config.is_tensorboard_enabled(),
+            self.config.is_comet_enabled(),
+            log_dir=writer_log_path,
+            experiment_name=self.config.experiment_name,
+            project_name=self.config.project_name,
+        )
+        writer.setup_local_writer(
+            self.config.logging, max_iter=self.config.max_num_iterations, banner_messages=banner_messages
+        )
+        writer.put_config(name="config", config_dict=dataclasses.asdict(self.config), step=0)
+        profiler.setup_profiler(self.config.logging, writer_log_path)
 
     def reset_callback(self, handle: ViewerButton) -> None:
         """Reset the model to the original checkpoint"""
@@ -101,67 +180,56 @@ class GaussEditTrainer(Trainer):
         self.pipeline.datamanager.train_dataparser_outputs.save_dataparser_transform(
             self.base_dir / "dataparser_transforms.json"
         )
-
-        # self.pipeline.sample_traj()
         
         self._init_viewer_state()
         with TimeWriter(writer, EventName.TOTAL_TRAIN_TIME):
-            for COUNT in range(self.pipeline.config.dataset_update_num):
-                num_iterations = self.pipeline.config.render_rate
-                step = 0
-                for step in range(self._start_step, self._start_step + num_iterations):
-                    while self.training_state == "paused":
-                        time.sleep(0.01)
-                    with self.train_lock:
-                        with TimeWriter(writer, EventName.ITER_TRAIN_TIME, step=step) as train_t:
-                            self.pipeline.train()
+            num_iterations = self.pipeline.config.render_rate
+            for step in range(self._start_step, self._start_step + num_iterations):
+                while self.training_state == "paused":
+                    time.sleep(0.01)
+                with self.train_lock:
+                    with TimeWriter(writer, EventName.ITER_TRAIN_TIME, step=step) as train_t:
+                        self.pipeline.train()
 
-                            # training callbacks before the training iteration
-                            for callback in self.callbacks:
-                                callback.run_callback_at_location(
-                                    step, location=TrainingCallbackLocation.BEFORE_TRAIN_ITERATION
-                                )
+                        # training callbacks before the training iteration
+                        for callback in self.callbacks:
+                            callback.run_callback_at_location(
+                                step, location=TrainingCallbackLocation.BEFORE_TRAIN_ITERATION
+                            )
 
-                            # time the forward pass
-                            loss, loss_dict, metrics_dict = self.train_iteration(step, COUNT)
+                        # time the forward pass
+                        loss, loss_dict, metrics_dict = self.train_iteration(step)
 
-                            # training callbacks after the training iteration
-                            for callback in self.callbacks:
-                                callback.run_callback_at_location(
-                                    step, location=TrainingCallbackLocation.AFTER_TRAIN_ITERATION
-                                )
+                        # training callbacks after the training iteration
+                        for callback in self.callbacks:
+                            callback.run_callback_at_location(
+                                step, location=TrainingCallbackLocation.AFTER_TRAIN_ITERATION
+                            )
 
-                    self._update_viewer_state(step)
+                self._update_viewer_state(step)
 
-                    # a batch of train rays
-                    if step_check(step, self.config.logging.steps_per_log, run_at_zero=True):
-                        writer.put_scalar(name="Train Loss", scalar=loss, step=step)
-                        writer.put_dict(name="Train Loss Dict", scalar_dict=loss_dict, step=step)
-                        writer.put_dict(name="Train Metrics Dict", scalar_dict=metrics_dict, step=step)
-                        # The actual memory allocated by Pytorch. This is likely less than the amount
-                        # shown in nvidia-smi since some unused memory can be held by the caching
-                        # allocator and some context needs to be created on GPU. See Memory management
-                        # (https://pytorch.org/docs/stable/notes/cuda.html#cuda-memory-management)
-                        # for more details about GPU memory management.
-                        writer.put_scalar(
-                            name="GPU Memory (MB)", scalar=torch.cuda.max_memory_allocated() / (1024**2), step=step
-                        )
+                # a batch of train rays
+                if step_check(step, self.config.logging.steps_per_log, run_at_zero=True):
+                    writer.put_scalar(name="Train Loss", scalar=loss, step=step)
+                    writer.put_dict(name="Train Loss Dict", scalar_dict=loss_dict, step=step)
+                    writer.put_dict(name="Train Metrics Dict", scalar_dict=metrics_dict, step=step)
+                    # The actual memory allocated by Pytorch. This is likely less than the amount
+                    # shown in nvidia-smi since some unused memory can be held by the caching
+                    # allocator and some context needs to be created on GPU. See Memory management
+                    # (https://pytorch.org/docs/stable/notes/cuda.html#cuda-memory-management)
+                    # for more details about GPU memory management.
+                    writer.put_scalar(
+                        name="GPU Memory (MB)", scalar=torch.cuda.max_memory_allocated() / (1024**2), step=step
+                    )
 
-                    # Do not perform evaluation if there are no validation images
-                    if self.pipeline.datamanager.eval_dataset:
-                        self.eval_iteration(step)
+                # Do not perform evaluation if there are no validation images
+                if self.pipeline.datamanager.eval_dataset:
+                    self.eval_iteration(step)
 
-                    if step_check(step, self.config.steps_per_save):
-                        self.save_checkpoint(step)
+                if step_check(step, self.config.steps_per_save):
+                    self.save_checkpoint(step)
 
-                    writer.write_out_storage()
-
-                if COUNT < self.pipeline.config.dataset_update_num - 1:
-                    if ((step+1) % self.pipeline.config.render_rate == 0):
-                        CONSOLE.print("Reloading initial checkpoints",style="bold yellow")
-                        self._load_checkpoint()
-                        # breakpoint()
-                        CONSOLE.print("Done reloading initial checkpoints",style="bold yellow")
+                writer.write_out_storage()
 
         # save checkpoint at the end of training
         self.save_checkpoint(step)
@@ -187,7 +255,7 @@ class GaussEditTrainer(Trainer):
             self._train_complete_viewer()
 
     @profiler.time_function
-    def train_iteration(self, step: int, count: int) -> TRAIN_INTERATION_OUTPUT:
+    def train_iteration(self, step: int) -> TRAIN_INTERATION_OUTPUT:
         """Run one iteration with a batch of inputs. Returns dictionary of model losses.
 
         Args:
@@ -202,7 +270,7 @@ class GaussEditTrainer(Trainer):
         cpu_or_cuda_str = "cpu" if cpu_or_cuda_str == "mps" else cpu_or_cuda_str
         
         with torch.autocast(device_type=cpu_or_cuda_str, enabled=self.mixed_precision):
-            _, loss_dict, metrics_dict = self.pipeline.get_train_loss_dict(step=step, count=count)
+            _, loss_dict, metrics_dict = self.pipeline.get_train_loss_dict(step=step)
             loss = functools.reduce(torch.add, loss_dict.values())
         self.grad_scaler.scale(loss).backward()  # type: ignore
         needs_step = [

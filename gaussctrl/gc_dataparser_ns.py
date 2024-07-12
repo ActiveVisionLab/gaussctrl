@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Data parser for blender dataset"""
+"""Data parser for nerfstudio dataset"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -47,10 +47,10 @@ from nerfstudio.viewer_legacy.server.utils import three_js_perspective_camera_fo
 MAX_AUTO_RESOLUTION = 1600
 
 @dataclass
-class GaussEditDataParserConfig(DataParserConfig):
+class GaussCtrlDataParserConfig(DataParserConfig):
     """Blender dataset parser config"""
 
-    _target: Type = field(default_factory=lambda: GaussEditDataParser)
+    _target: Type = field(default_factory=lambda: GaussCtrlDataParser)
     """target class to instantiate"""
     data: Path = Path("data/blender/lego")
     """Directory specifying location of data."""
@@ -85,19 +85,13 @@ class GaussEditDataParserConfig(DataParserConfig):
     """The interval between frames to use for eval. Only used when eval_mode is eval-interval."""
     depth_unit_scale_factor: float = 1e-3
     """Scales the depth values to meters. Default value is 0.001 for a millimeter to meter conversion."""
-    load_mask: bool = True
-    load_intrinsic_cam_512: bool = False
-
 
 @dataclass
-class GaussEditDataParser(DataParser):
-    """Blender Dataset
-    Some of this code comes from https://github.com/yenchenlin/nerf-pytorch/blob/master/load_blender.py#L37.
-    """
+class GaussCtrlDataParser(DataParser):
 
-    config: GaussEditDataParserConfig
+    config: GaussCtrlDataParserConfig
 
-    def __init__(self, config: GaussEditDataParserConfig):
+    def __init__(self, config: GaussCtrlDataParserConfig):
         super().__init__(config=config)
         self.data: Path = config.data
         self.scale_factor: float = config.scale_factor
@@ -300,21 +294,6 @@ class GaussEditDataParser(DataParser):
         cy = float(meta["cy"]) if cy_fixed else torch.tensor(cy, dtype=torch.float32)[idx_tensor]
         height = int(meta["h"]) if height_fixed else torch.tensor(height, dtype=torch.int32)[idx_tensor]
         width = int(meta["w"]) if width_fixed else torch.tensor(width, dtype=torch.int32)[idx_tensor]
-        if distort_fixed:
-            distortion_params = (
-                torch.tensor(meta["distortion_params"], dtype=torch.float32)
-                if "distortion_params" in meta
-                else camera_utils.get_distortion_params(
-                    k1=float(meta["k1"]) if "k1" in meta else 0.0,
-                    k2=float(meta["k2"]) if "k2" in meta else 0.0,
-                    k3=float(meta["k3"]) if "k3" in meta else 0.0,
-                    k4=float(meta["k4"]) if "k4" in meta else 0.0,
-                    p1=float(meta["p1"]) if "p1" in meta else 0.0,
-                    p2=float(meta["p2"]) if "p2" in meta else 0.0,
-                )
-            )
-        else:
-            distortion_params = torch.stack(distort, dim=0)[idx_tensor]
 
         # Only add fisheye crop radius parameter if the images are actually fisheye, to allow the same config to be used
         # for both fisheye and non-fisheye datasets.
@@ -327,7 +306,6 @@ class GaussEditDataParser(DataParser):
             fy=fy,
             cx=cx,
             cy=cy,
-            # distortion_params=distortion_params,
             height=height,
             width=width,
             camera_to_worlds=poses[:, :3, :4],
@@ -335,21 +313,6 @@ class GaussEditDataParser(DataParser):
             metadata=metadata,
         )
         
-        # if self.config.load_intrinsic_cam_512:
-        #     fov = 50
-        #     image_height = 512
-        #     focal_length = three_js_perspective_camera_focal_length(fov, image_height)
-        #     fx = torch.tensor([focal_length] * len(poses))
-        #     fy = torch.tensor([focal_length] * len(poses))
-        #     cameras = Cameras(
-        #         fx=fx,
-        #         fy=fy,
-        #         cx=512.0 / 2,
-        #         cy=512.0 / 2,
-        #         camera_to_worlds=poses[:, :3, :4],
-        #         camera_type=CameraType.PERSPECTIVE,
-        #     )
-
         assert self.downscale_factor is not None
         cameras.rescale_output_resolution(scaling_factor=1.0 / self.downscale_factor)
 
@@ -442,8 +405,7 @@ class GaussEditDataParser(DataParser):
                     metadata.update(sparse_points)
             self.prompted_user = True
 
-        unedited_image_filenames = [self.data / Path(f'unedited/frame_{idx+1:05d}.jpg') for idx in range(len(image_filenames))]
-        metadata['unedited_image_filenames'] = unedited_image_filenames
+        # Load everything if they are already generated in the data folder
         if os.path.exists(self.data / Path('depth_npy')): 
             depth_filenames = [self.data / Path(f'depth_npy/frame_{idx+1:05d}.npy') for idx in range(len(image_filenames))]
             metadata['depth_filenames'] = depth_filenames
@@ -453,6 +415,9 @@ class GaussEditDataParser(DataParser):
         if os.path.exists(self.data / Path('mask_npy')) and self.config.load_mask: 
             mask_filenames = [self.data / Path(f'mask_npy/frame_{idx+1:05d}.npy') for idx in range(len(image_filenames))]
             metadata['mask_filenames'] = mask_filenames
+        if os.path.exists(self.data / Path('unedited')): 
+            unedited_image_filenames = [self.data / Path(f'unedited/frame_{idx+1:05d}.jpg') for idx in range(len(image_filenames))]
+            metadata['unedited_image_filenames'] = unedited_image_filenames
         
         dataparser_outputs = DataparserOutputs(
             image_filenames=image_filenames,
@@ -462,12 +427,9 @@ class GaussEditDataParser(DataParser):
             dataparser_scale=scale_factor,
             dataparser_transform=dataparser_transform_matrix,
             metadata={
-                # "depth_filenames": depth_filenames if len(depth_filenames) > 0 else None,
-                # "depth_unit_scale_factor": self.config.depth_unit_scale_factor,
                 **metadata,
             },
         )
-        
 
         return dataparser_outputs
     

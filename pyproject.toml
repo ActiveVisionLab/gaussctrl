@@ -4,7 +4,6 @@ version = "0.1.0"
 
 dependencies=[
     "clip @ git+https://github.com/openai/CLIP.git",
-    
     "accelerate",
     "einops",
 ]
@@ -37,7 +36,7 @@ disable = [
 include = ["gaussctrl"]
 
 [project.entry-points.'nerfstudio.method_configs']
-gs-edit = 'gaussctrl.gs_config:gaussctrl_method'
+gaussctrl = 'gaussctrl.gc_config:gaussctrl_method'
 
 [project.scripts]
-ns-myrender = "gaussctrl.render:entrypoint"
+ns-gaussctrl-render = "gaussctrl.gc_render:entrypoint"
