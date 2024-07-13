@@ -98,7 +98,7 @@ ns-train splatfacto --output-dir {output/folder} --experiment-name EXPEIMENT_NAM
 ```
 
 ### 2. Edit your model
-Once you finish training the `splatfacto` model, the checkpoints will be saved to `unedited_models/bear` folder. 
+Once you finish training the `splatfacto` model, the checkpoints will be saved to `output/folder/EXPEIMENT_NAME` folder. 
 
 Start editing your model by running:
 
