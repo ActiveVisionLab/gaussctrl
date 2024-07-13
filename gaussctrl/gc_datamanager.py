@@ -86,7 +86,6 @@ class GaussCtrlDataManager(FullImageDatamanager, Generic[TDataset]):
         self.step_every = 1
         self.edited_image_dict = {}
         
-        breakpoint()
         # Sample data
         if len(self.train_dataset._dataparser_outputs.image_filenames) <= self.config.subset_num * self.config.sampled_views_every_subset or self.config.load_all:
             self.cameras = self.train_dataset.cameras
