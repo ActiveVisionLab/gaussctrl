@@ -35,7 +35,7 @@
 
 Clone the repo. 
 ```bash
-git clone https://github.com/jingwu2121/gaussctrl.git
+git clone https://github.com/ActiveVisionLab/gaussctrl.git
 cd gaussctrl
 ```
 
