@@ -29,7 +29,7 @@
 
 ![teaser](./assets/teaser.png)
 
-## Installation
+## ⚙️ Installation
 
 - Tested on CUDA11.8 + Ubuntu22.04 + NeRFStudio1.0.0 (NVIDIA RTX A5000 24G)
 
@@ -71,7 +71,7 @@ pip install -e .
 ns-train -h
 ```
 
-## Data
+## 🗄️ Data
 
 ### Use Our Preprocessed Data
 
@@ -85,13 +85,13 @@ We thank these authors for their great work!
 
 ### Customize Your Data
 
-We recommend to pre-process your data to 512x512, and follow [this page](https://docs.nerf.studio/quickstart/custom_dataset.html) to process your data. 
+We recommend to pre-process your data to 512x512, and following [this page](https://docs.nerf.studio/quickstart/custom_dataset.html) to process your data. 
 
-## Get Started
+## :arrow_forward: Get Started
 ![Method](./assets/method.png)
 
 ### 1. Train a 3DGS
-To get started, you firstly need to train your 3DGS model. We use `splatfacto` from NeRFStudio. 
+To get started, you first need to train your 3DGS model. We use `splatfacto` from NeRFStudio. 
 
 ```bash 
 ns-train splatfacto --output-dir {output/folder} --experiment-name EXPEIMENT_NAME nerfstudio-data --data {path/to/your/data}
@@ -112,15 +112,15 @@ Please note that the Lang-SAM is optional here. If you are editing the environme
 ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.prompt "YOUR PROMPT" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} 
 ```
 
-Here, `--pipeline.guidance_scale` denotes the classifier free guidance used when editing the images. `--pipeline.chunk_size` denotes the number of images edited together during 1 batch. We are using **NVIDIA RTX A5000** GPU (24G), and the maximum chunk size is 3. (~22G) 
+Here, `--pipeline.guidance_scale` denotes the classifier-free guidance used when editing the images. `--pipeline.chunk_size` denotes the number of images edited together during 1 batch. We are using **NVIDIA RTX A5000** GPU (24G), and the maximum chunk size is 3. (~22G) 
 
 ### Small Tips
-- If your find your editings are not as expected, please check the images edited by ControlNet. 
-- Normally, conditioning your editing on the good ControlNet editing views is very helpful, which means it is better to choose those good ControlNet editing views as reference views. 
+- If your editings are not as expected, please check the images edited by ControlNet. 
+- Normally, conditioning your editing on the good ControlNet editing views is very helpful, which means choosing those good ControlNet editing views as reference views is better. 
 
-## Reproduce Our Results
+## :wrench: Reproduce Our Results
 
-Experiments in the main paper are inclued in `scripts` folder. To reproduce the results, first train the `splatfacto` model. We take the `bear` case as an example here. 
+Experiments in the main paper are included in the `scripts` folder. To reproduce the results, first train the `splatfacto` model. We take the `bear` case as an example here. 
 ```bash
 ns-train splatfacto --output-dir unedited_models --experiment-name bear nerfstudio-data --data data/bear
 ```
@@ -132,13 +132,13 @@ ns-train gaussctrl --load-checkpoint {unedited_models/bear/splatfacto/.../nerfst
 
 In our experiments, We sampled 40 views randomly from the entire dataset to accelerate the method, which is set in `gc_datamanager.py` by default. We split the entire set into 4 subsets, and randomly sampled 10 images in each subset split. Feel free to decrease/increase the number to see the difference by modifying `--pipeline.datamanager.subset-num` and `--pipeline.datamanager.sampled-views-every-subset`. Set `--pipeline.datamanager.load-all` to `True`, if you want to edit all the images in the dataset. 
 
-## View Results Using NeRFStudio Viewer
+## :camera: View Results Using NeRFStudio Viewer
 ```bash
 ns-viewer --load-config {outputs/.../config.yml} 
 ```
 
-## Render Your Results
-- Render the all the dataset views. 
+## :movie_camera: Render Your Results
+- Render all the dataset views. 
 ```bash 
 ns-gaussctrl-render dataset --load-config {outputs/.../config.yml} --output_path {render/EXPEIMENT_NAME} 
 ```
