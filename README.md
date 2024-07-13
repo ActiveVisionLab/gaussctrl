@@ -118,7 +118,7 @@ Here, `--pipeline.guidance_scale` denotes the classifier free guidance used when
 - If your find your editings are not as expected, please check the images edited by ControlNet. 
 - Normally, conditioning your editing on the good ControlNet editing views is very helpful, which means it is better to choose those good ControlNet editing views as reference views. 
 
-## Reproducing Our Results
+## Reproduce Our Results
 
 Experiments in the main paper are inclued in `scripts` folder. To reproduce the results, first train the `splatfacto` model. We take the `bear` case as an example here. 
 ```bash
