@@ -65,6 +65,7 @@ class GaussCtrlPipelineConfig(VanillaPipelineConfig):
     """Inference steps"""
     chunk_size: int = 5
     """Batch size for image editing, feel free to reduce to fit your GPU"""
+    ref_view_num: int = 4
     
 
 class GaussCtrlPipeline(VanillaPipeline):
@@ -99,7 +100,7 @@ class GaussCtrlPipeline(VanillaPipeline):
         self.negative_prompts = 'longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality'
         
         view_num = len(self.datamanager.cameras) 
-        anchors = list(range(0, view_num, view_num // 4)) + [view_num]
+        anchors = [(view_num * i) // self.config.ref_view_num for i in range(self.config.ref_view_num)] + [view_num]
         
         random.seed(13789)
         self.ref_indices = [random.randint(anchor, anchors[idx+1]) for idx, anchor in enumerate(anchors[:-1])] 
@@ -150,7 +151,6 @@ class GaussCtrlPipeline(VanillaPipeline):
         
     def edit_images(self):
         '''Edit images with ControlNet and AttnAlign''' 
-        # if self.test_mode == "val":
         # Set up ControlNet and AttnAlign
         self.pipe.scheduler = self.ddim_scheduler
         self.pipe.unet.set_attn_processor(
@@ -163,7 +163,7 @@ class GaussCtrlPipeline(VanillaPipeline):
         
         print("#############################")
         CONSOLE.print("Start Editing: ", style="bold yellow")
-        CONSOLE.print(f"Reference views are {[j+1 for j in self.ref_indices]}, counting from 1", style="bold yellow")
+        CONSOLE.print(f"Reference views are {[j+1 for j in self.ref_indices]}", style="bold yellow")
         print("#############################")
         ref_disparity_list = []
         ref_z0_list = []

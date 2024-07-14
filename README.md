@@ -112,7 +112,7 @@ Please note that the Lang-SAM is optional here. If you are editing the environme
 ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.prompt "YOUR PROMPT" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} 
 ```
 
-Here, `--pipeline.guidance_scale` denotes the classifier-free guidance used when editing the images. `--pipeline.chunk_size` denotes the number of images edited together during 1 batch. We are using **NVIDIA RTX A5000** GPU (24G), and the maximum chunk size is 3. (~22G) 
+Here, `--pipeline.guidance_scale` denotes the classifier-free guidance used when editing the images. `--pipeline.chunk_size` denotes the number of images edited together during 1 batch. We are using **NVIDIA RTX A5000** GPU (24G), and the maximum chunk size is 3. (~22G) Control the number of reference views using `--pipeline.ref_view_num`, by default, it is set to 4. 
 
 ### Small Tips
 - If your editings are not as expected, please check the images edited by ControlNet. 
