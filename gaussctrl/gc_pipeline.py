@@ -154,10 +154,10 @@ class GaussCtrlPipeline(VanillaPipeline):
         # Set up ControlNet and AttnAlign
         self.pipe.scheduler = self.ddim_scheduler
         self.pipe.unet.set_attn_processor(
-                        processor=utils.CrossFrameAttnProcessor(self_attn_coeff=0.6,
+                        processor=utils.CrossViewAttnProcessor(self_attn_coeff=0.6,
                         unet_chunk_size=2))
         self.pipe.controlnet.set_attn_processor(
-                        processor=utils.CrossFrameAttnProcessor(self_attn_coeff=0,
+                        processor=utils.CrossViewAttnProcessor(self_attn_coeff=0,
                         unet_chunk_size=2)) 
         CONSOLE.print("Done Reset Attention Processor", style="bold blue")
         
