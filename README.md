@@ -1,6 +1,6 @@
 <p align="center">
   
-  <h1 align="center"><strong>[ECCV 2024] GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing</strong></h3>
+  <h1 align="center"><strong>🎥 [ECCV 2024] GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing</strong></h3>
 
   <p align="center">
     <a href="https://jingwu2121.github.io/" class="name-link" target="_blank">Jing Wu<sup>*1</sup> </a>,
