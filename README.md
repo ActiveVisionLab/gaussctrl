@@ -1,5 +1,5 @@
 <p align="center">
-  
+
   <h1 align="center"><strong>🎥 [ECCV 2024] GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing</strong></h3>
 
   <p align="center">
@@ -51,6 +51,8 @@ GaussCtrl is built upon NeRFStudio, follow [this link](https://docs.nerf.studio/
 
 ```bash
 pip install nerfstudio==1.0.0
+
+pip install gsplat==0.1.3
 ```
 
 Install Lang-SAM for mask extraction. 
