@@ -161,7 +161,7 @@ If you find this code or find the paper useful for your research, please conside
 @article{gaussctrl2024,
 author = {Wu, Jing and Bian, Jia-Wang and Li, Xinghui and Wang, Guangrun and Reid, Ian and Torr, Philip and Prisacariu, Victor},
 title = {{GaussCtrl: Multi-View Consistent Text-Driven 3D Gaussian Splatting Editing}},
-booktitle = {ECCV},
+journal = {ECCV},
 year = {2024},
 }
 ```
