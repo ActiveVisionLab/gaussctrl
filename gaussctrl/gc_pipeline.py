@@ -66,6 +66,9 @@ class GaussCtrlPipelineConfig(VanillaPipelineConfig):
     chunk_size: int = 5
     """Batch size for image editing, feel free to reduce to fit your GPU"""
     ref_view_num: int = 4
+    """Number of reference frames"""
+    diffusion_ckpt: str = 'CompVis/stable-diffusion-v1-4'
+    """Diffusion checkpoints"""
     
 
 class GaussCtrlPipeline(VanillaPipeline):
@@ -88,11 +91,11 @@ class GaussCtrlPipeline(VanillaPipeline):
         
         self.prompt = self.config.prompt
         self.pipe_device = 'cuda:0'
-        self.ddim_scheduler = DDIMScheduler.from_pretrained("runwayml/stable-diffusion-v1-5", subfolder="scheduler")
-        self.ddim_inverser = DDIMInverseScheduler.from_pretrained("runwayml/stable-diffusion-v1-5", subfolder="scheduler")
+        self.ddim_scheduler = DDIMScheduler.from_pretrained(self.config.diffusion_ckpt, subfolder="scheduler")
+        self.ddim_inverser = DDIMInverseScheduler.from_pretrained(self.config.diffusion_ckpt, subfolder="scheduler")
         
         controlnet = ControlNetModel.from_pretrained("lllyasviel/sd-controlnet-depth")
-        self.pipe = StableDiffusionControlNetPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", controlnet=controlnet).to(self.device).to(torch.float16)
+        self.pipe = StableDiffusionControlNetPipeline.from_pretrained(self.config.diffusion_ckpt, controlnet=controlnet).to(self.device).to(torch.float16)
         self.pipe.to(self.pipe_device)
 
         added_prompt = 'best quality, extremely detailed'
