@@ -29,6 +29,9 @@
 
 ![teaser](./assets/teaser.png)
 
+## ✨ News
+- [9.4.2024] Our original results utilise stable-diffusion-v1-5 from runwayml for editing, which is now unavailable. Please change the diffusion checkpoint to other available models, e.g. `CompVis/stable-diffusion-v1-4`, by using `--pipeline.diffusion_ckpt "CompVis/stable-diffusion-v1-4"`. Reproduce our original results by using the checkpoint `--pipeline.diffusion_ckpt "jinggogogo/gaussctrl-sd15"` 
+
 ## ⚙️ Installation
 
 - Tested on CUDA11.8 + Ubuntu22.04 + NeRFStudio1.0.0 (NVIDIA RTX A5000 24G)
