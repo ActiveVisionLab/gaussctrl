@@ -225,7 +225,7 @@ class GaussCtrlDataManager(FullImageDatamanager, Generic[TDataset]):
         data["image"] = data["image"].to(self.device)
         
         assert len(self.train_dataset.cameras.shape) == 1, "Assumes single batch dimension"
-        if len(self.train_dataset._dataparser_outputs.image_filenames) <= self.config.subset_num * self.config.sampled_views_every_subset:
+        if len(self.train_dataset._dataparser_outputs.image_filenames) <= self.config.subset_num * self.config.sampled_views_every_subset or self.config.load_all:
             camera = self.cameras[image_idx : image_idx + 1].to(self.device)
         else:
             camera = self.cameras[image_idx : image_idx + 1][0].to(self.device)
