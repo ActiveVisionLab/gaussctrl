@@ -162,7 +162,7 @@ class GaussCtrlPipeline(VanillaPipeline):
         self.pipe.controlnet.set_attn_processor(
                         processor=utils.CrossViewAttnProcessor(self_attn_coeff=0,
                         unet_chunk_size=2)) 
-        CONSOLE.print("Done Reset Attention Processor", style="bold blue")
+        CONSOLE.print("Done Resetting Attention Processor", style="bold blue")
         
         print("#############################")
         CONSOLE.print("Start Editing: ", style="bold yellow")
