@@ -108,13 +108,13 @@ Once you finish training the `splatfacto` model, the checkpoints will be saved t
 Start editing your model by running:
 
 ```bash
-ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.prompt "YOUR PROMPT" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} --pipeline.langsam_obj 'OBJECT TO BE EDITED' 
+ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.edit_prompt "YOUR PROMPT" --pipeline.reverse_prompt "PROMPT TO DESCRIBE THE UNEDITED SCENE" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} --pipeline.langsam_obj 'OBJECT TO BE EDITED' 
 ```
 
 Please note that the Lang-SAM is optional here. If you are editing the environment, please remove this argument. 
 
 ```bash
-ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.prompt "YOUR PROMPT" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} 
+ns-train gaussctrl --load-checkpoint {output/folder/.../nerfstudio_models/step-000029999.ckpt} --experiment-name EXPEIMENT_NAME --output-dir {output/folder} --pipeline.datamanager.data {path/to/your/data} --pipeline.edit_prompt "YOUR PROMPT" --pipeline.reverse_prompt "PROMPT TO DESCRIBE THE UNEDITED SCENE" --pipeline.guidance_scale 5 --pipeline.chunk_size {batch size of images during editing} 
 ```
 
 Here, `--pipeline.guidance_scale` denotes the classifier-free guidance used when editing the images. `--pipeline.chunk_size` denotes the number of images edited together during 1 batch. We are using **NVIDIA RTX A5000** GPU (24G), and the maximum chunk size is 3. (~22G) 
@@ -134,7 +134,7 @@ ns-train splatfacto --output-dir unedited_models --experiment-name bear nerfstud
 
 Then edit the 3DGS by running:
 ```bash
-ns-train gaussctrl --load-checkpoint {unedited_models/bear/splatfacto/.../nerfstudio_models/step-000029999.ckpt} --experiment-name bear --output-dir outputs --pipeline.datamanager.data data/bear --pipeline.prompt "a photo of a polar bear in the forest" --pipeline.guidance_scale 5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'bear' 
+ns-train gaussctrl --load-checkpoint unedited_models/bear/splatfacto/2024-07-10_170906/nerfstudio_models/step-000029999.ckpt --experiment-name bear --output-dir outputs --pipeline.datamanager.data data/bear --pipeline.edit_prompt "a photo of a polar bear in the forest" --pipeline.reverse_prompt "a photo of a bear statue in the forest" --pipeline.guidance_scale 5 --pipeline.chunk_size 3 --pipeline.langsam_obj 'bear' --viewer.quit-on-train-completion True 
 ```
 
 In our experiments, We sampled 40 views randomly from the entire dataset to accelerate the method, which is set in `gc_datamanager.py` by default. We split the entire set into 4 subsets, and randomly sampled 10 images in each subset split. Feel free to decrease/increase the number to see the difference by modifying `--pipeline.datamanager.subset-num` and `--pipeline.datamanager.sampled-views-every-subset`. Set `--pipeline.datamanager.load-all` to `True`, if you want to edit all the images in the dataset. 
