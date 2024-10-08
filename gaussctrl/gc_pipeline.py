@@ -55,8 +55,10 @@ class GaussCtrlPipelineConfig(VanillaPipelineConfig):
     """specifies the datamanager config"""
     render_rate: int = 500
     """how many gauss steps for gauss training"""
-    prompt: str = ""
+    edit_prompt: str = ""
     """Positive Prompt"""
+    reverse_prompt: str = "" 
+    """DDIM Inversion Prompt"""
     langsam_obj: str = ""
     """The object to be edited"""
     guidance_scale: float = 5
@@ -89,7 +91,8 @@ class GaussCtrlPipeline(VanillaPipeline):
         self.test_mode = test_mode
         self.langsam = LangSAM()
         
-        self.prompt = self.config.prompt
+        self.edit_prompt = self.config.edit_prompt
+        self.reverse_prompt = self.config.reverse_prompt
         self.pipe_device = 'cuda:0'
         self.ddim_scheduler = DDIMScheduler.from_pretrained(self.config.diffusion_ckpt, subfolder="scheduler")
         self.ddim_inverser = DDIMInverseScheduler.from_pretrained(self.config.diffusion_ckpt, subfolder="scheduler")
@@ -99,7 +102,8 @@ class GaussCtrlPipeline(VanillaPipeline):
         self.pipe.to(self.pipe_device)
 
         added_prompt = 'best quality, extremely detailed'
-        self.positive_prompt = self.prompt + ', ' + added_prompt
+        self.positive_prompt = self.edit_prompt + ', ' + added_prompt
+        self.positive_reverse_prompt = self.reverse_prompt + ', ' + added_prompt
         self.negative_prompts = 'longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality'
         
         view_num = len(self.datamanager.cameras) 
@@ -135,7 +139,7 @@ class GaussCtrlPipeline(VanillaPipeline):
             disparity = self.depth2disparity_torch(rendered_depth[:,:,0][None]) 
             
             self.pipe.scheduler = self.ddim_inverser
-            latent, _ = self.pipe(prompt=self.positive_prompt, #  placeholder here, since cfg=0
+            latent, _ = self.pipe(prompt=self.positive_reverse_prompt, #  placeholder here, since cfg=0
                                 num_inference_steps=self.num_inference_steps, 
                                 latents=init_latent, 
                                 image=disparity, return_dict=False, guidance_scale=0, output_type='latent')
