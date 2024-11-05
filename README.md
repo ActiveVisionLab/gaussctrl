@@ -54,6 +54,8 @@ GaussCtrl is built upon NeRFStudio, follow [this link](https://docs.nerf.studio/
 
 ```bash
 pip install nerfstudio==1.0.0
+
+pip install gsplat==0.1.2.1
 ```
 
 Install Lang-SAM for mask extraction. 
