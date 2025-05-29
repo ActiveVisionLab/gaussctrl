@@ -125,7 +125,7 @@ Control the number of reference views using `--pipeline.ref_view_num`, by defaul
 
 ### Small Tips
 - If your editings are not as expected, please check the images edited by ControlNet. 
-- Normally, conditioning your editing on the good ControlNet editing views is very helpful, which means choosing those good ControlNet editing views as reference views is better. 
+- Empirically, conditioning your editing on the good ControlNet editing views is very helpful, which means choosing those good ControlNet editing views as reference views is better. 
 
 ## :wrench: Reproduce Our Results
 
