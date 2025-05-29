@@ -92,7 +92,7 @@ We thank these authors for their great work!
 
 ### Customize Your Data
 
-We recommend to pre-process your data to 512x512, and following [this page](https://docs.nerf.studio/quickstart/custom_dataset.html) to process your data. 
+We recommend to pre-process your data to 512x512, and follow [this page](https://docs.nerf.studio/quickstart/custom_dataset.html) to process your data. 
 
 ## :arrow_forward: Get Started
 ![Method](./assets/method.png)
